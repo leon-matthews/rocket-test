@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-
+"""
+Slightly over-engineered UDP echo client and server, to get myself back
+into the raw socket networking game!
+"""
 import argparse
 import logging
-from pprint import pprint as pp
 import socket
 import sys
 
@@ -60,7 +62,12 @@ def client(host: str, port: int) -> None:
         print(received.decode("utf-8", errors="replace"))
 
 
-def careful_client(host: str, port: int, message: bytes, timeout: float = 5) -> bytes:
+def careful_client(
+    host: str,
+    port: int,
+    message: bytes,
+    timeout: float = 5,
+) -> bytes:
     """
     Create new socket and send single outgoing UDP message.
 
@@ -157,7 +164,7 @@ def parse(arguments: list[str]) -> argparse.Namespace:
     Returns:
         Options extracted from given arguments.
     """
-    parser = argparse.ArgumentParser(description='Raw socket experiments for Rocket Lab')
+    parser = argparse.ArgumentParser(description='UDP echo client and server')
     parser.add_argument('role', choices=ROLES, help='run as client or server?')
     parser.add_argument(
         '-a', '--address',
@@ -195,7 +202,7 @@ def main(options: argparse.Namespace) -> int:
     elif options.role == 'server':
         server(host, options.port)
     else:
-        print("Unknown role: {options.role!}" ,file=sys.stderr)
+        print("Unknown role: {options.role!}", file=sys.stderr)
         return 1
     return 0
 

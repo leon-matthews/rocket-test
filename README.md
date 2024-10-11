@@ -2,7 +2,7 @@
 # Rocket Lab Production Automation Coding Test
 
 Produce GUI for testing team to visualise the behivour of multiple devices
-simultaneously.
+simultaneously, using only the Python standard library and PyQt5.
 
 
 ## Tasks
@@ -15,9 +15,8 @@ Handle stream of multiplexed output from multiple, concurrent devices performing
 test runs and reporting back results.
 
 - [*] Experiment with UDP client/server
-- [ ] Experiment with UDP broadcasting
-- [ ] Experiment with UDP multicasting with own server
-- [ ] UDP multicasting experiment with DUT
+- [*] Experiment with UDP broadcasting
+- [ ] Experiment with UDP multicasting with DUT simulator
 - [ ] Collect list of devices on network via multicasting discovery messages
 - [ ] Send and recieve simple command to DUT via standard UDP networking
 - [ ] Brainstorm approaches for collecting and demultiplexing device test data
