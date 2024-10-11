@@ -27,51 +27,123 @@ def server(host: str, port: int) -> None:
     Returns:
         Loops forever
     """
-    # Create IP datagram socket and bind as server
+    # Create socket: UDP on a IP network
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     address = (host, port)
-    sock.bind(address)
 
-    # Fetch address directly from socket and log
+    # Request address from OS, ie. (hostname, port)
+    sock.bind(address)
     logger.info("UDP echo server listening on %r", sock.getsockname())
 
     # Listen, forever
     while True:
         data, address = sock.recvfrom(MAX_BYTES)
         logger.info(f"{address!r} sent {len(data):,} bytes:")
-        print(data)
+        logger.debug(data)
         sock.sendto(data, address)
 
 
-def client(host: str, port: int, text: str) -> None:
+def client(host: str, port: int) -> None:
     """
-    Create and tear-down socket for every mesage
+    Prompt user for string and send it to server in infinite loop.
+
+    String from user is encoded into UTF-8 before hitting network, then
+    decoded back into a string.
+
+    Args:
+        As per `server`.
+    """
+    while True:
+        text = input("> ")
+        message = text.encode("utf-8", errors="replace")
+        received = promiscuous_client(host, options.port, message)
+        print(received.decode("utf-8", errors="replace"))
+
+
+def careful_client(host: str, port: int, message: bytes, timeout: float = 5) -> bytes:
+    """
+    Create new socket and send single outgoing UDP message.
+
+    Solves promiscuous UDP client problem by using `socket.connect()` to force
+    OS to check sender address and reject packets not sent by destination
+    server.
+
+    Key socket calls:
+
+        s.connect() -> s.send() -> s.recv()
 
     Args:
         host:
             Host to listen on, eg. '127.0.0.0' for loopback.
         port:
             UDP port number to listen on.
-        text:
-            Unicode text to send. Will be encoded to UTF-8 for transport.
+        message:
+            Byte string to send to server.
+        timeout:
+            How many seconds to wait for server response.
+
+    Raises:
+        ConnectionRefusedError:
+            Will immediately raise error if server not listening on port.
+        TimeoutError:
+            If server does not respond within `timeout` seconds.
 
     Returns:
-        None
+        Byte string send back from server.
+    """
+    # Create socket
+    # Note that port is assigned during call to connect, not on first message
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    address = (host, port)
+    sock.connect(address)
+    sock.settimeout(timeout)
+    logger.info("UDP address assigned by OS: %r", sock.getsockname())
+
+    # Send message to server, address not necessary
+    sock.send(message)
+
+    # Recieved data back from server
+    data = sock.recv(MAX_BYTES)
+    logger.info(f"Server sent back {len(data):,} bytes")
+    return data
+
+
+def promiscuous_client(host: str, port: int, message: bytes) -> bytes:
+    """
+    Create new socket and send single outgoing UDP message.
+
+    Note that client will NOT raise a `ConnectionRefusedError` if client not
+    running.
+
+    Produces a promiscuous client which will accept message to the client
+    port from anywhere. Key socket calls:
+
+        sock.sendto() -> sock.recvfrom()
+
+    Args:
+        As per `careful_client()`
+
+     Raises:
+        TimeoutError:
+            If server does not respond within `timeout` seconds.
+
+    Returns:
+        Byte string send back from server.
     """
     # Create socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.settimeout(1)
     address = (host, port)
+
+    # Send message to server
+    # Note that port is not assigned by OS until AFTER message is sent
+    sock.sendto(message, address)
     logger.info("UDP address assigned by OS: %r", sock.getsockname())
 
-    # Prepare and send data
-    data = text.encode('utf-8')
-    sock.sendto(data, address)
-
-    # Warning! Promiscuous client!
-    data, address = sock.recvfrom(MAX_BYTES)
-
-    logger.info(f"Server {address} sent back {len(data):,} bytes:")
-    print(text)
+    # Recieved data back from server
+    data, address = sock.recvfrom(MAX_BYTES)    # Warning! Promiscuous client!
+    logger.info(f"Server {address} sent back {len(received):,} bytes")
+    return data
 
 
 def parse(arguments: list[str]) -> argparse.Namespace:
@@ -111,9 +183,7 @@ def main(options: argparse.Namespace) -> int:
     """
     host = LOCALHOST
     if options.role == 'client':
-        while True:
-            text = input("> ")
-            client(host, options.port, text)
+        client(host, options.port)
     elif options.role == 'server':
         server(host, options.port)
     else:
@@ -123,6 +193,9 @@ def main(options: argparse.Namespace) -> int:
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format="%(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(levelname)-7s %(message)s",
+        level=logging.DEBUG,
+    )
     options = parse(sys.argv[1:])
     sys.exit(main(options))

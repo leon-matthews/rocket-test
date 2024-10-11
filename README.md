@@ -7,12 +7,14 @@ simultaneously.
 
 ## Tasks
 
+Planned actions to complete project.
+
 ### Networking
 
 Handle stream of multiplexed output from multiple, concurrent devices performing
 test runs and reporting back results.
 
-- [ ] Experiment with UDP client/server
+- [*] Experiment with UDP client/server
 - [ ] Experiment with UDP broadcasting
 - [ ] Experiment with UDP multicasting with own server
 - [ ] UDP multicasting experiment with DUT
@@ -22,6 +24,8 @@ test runs and reporting back results.
 
 
 ### GUI
+
+Check list for tasks producing graphic user interface.
 
 - [ ] Produce paper sketch of GUI elements
 - [ ] List devices in navigation
@@ -37,3 +41,25 @@ test runs and reporting back results.
     * Averages (median and mean)?
     * Stddev
     * Maybe a nice box-and-whisker to visualise & compare above values?
+
+
+## Notes
+
+My working notes. Internal use only.
+
+### Promiscuous UDP client
+
+There are two modes of operation for UDP client code. Promiscuous and not. The
+former will accept an UDP datagram to the client port from anywhere, the latter
+rejects messages not from the server previously connected to.
+
+    # Careful
+    s.connect() -> s.send() -> s.recv()
+
+    # Promiscuous
+    sock.sendto() -> sock.recvfrom()
+
+
+I've implemented both approaches in the echo server as `careful_client()` and
+`promiscuous_client()`, as I'm not yet sure which will prove the most useful
+for the final program.
