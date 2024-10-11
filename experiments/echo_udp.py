@@ -8,7 +8,7 @@ import sys
 
 
 logger = logging.getLogger(__name__)
-LOCALHOST = "127.0.0.1"
+LOOPBACK = "127.0.0.1"
 DEFAULT_PORT = 6060
 MAX_BYTES = 65535
 ROLES = ('client', 'server')
@@ -56,7 +56,7 @@ def client(host: str, port: int) -> None:
     while True:
         text = input("> ")
         message = text.encode("utf-8", errors="replace")
-        received = promiscuous_client(host, options.port, message)
+        received = careful_client(host, options.port, message)
         print(received.decode("utf-8", errors="replace"))
 
 
@@ -142,7 +142,7 @@ def promiscuous_client(host: str, port: int, message: bytes) -> bytes:
 
     # Recieved data back from server
     data, address = sock.recvfrom(MAX_BYTES)    # Warning! Promiscuous client!
-    logger.info(f"Server {address} sent back {len(received):,} bytes")
+    logger.info(f"Server {address} sent back {len(data):,} bytes")
     return data
 
 
@@ -160,8 +160,14 @@ def parse(arguments: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Raw socket experiments for Rocket Lab')
     parser.add_argument('role', choices=ROLES, help='run as client or server?')
     parser.add_argument(
+        '-a', '--address',
+        type=str,
+        default=LOOPBACK,
+        nargs="?",
+        help=f"Address of interface to bind to (default {LOOPBACK!r})"
+    )
+    parser.add_argument(
         '-p', '--port',
-        metavar='PORT',
         type=int,
         default=DEFAULT_PORT,
         help=f"UDP port to use (default {DEFAULT_PORT})"
@@ -181,7 +187,9 @@ def main(options: argparse.Namespace) -> int:
     Returns:
         Zero on success
     """
-    host = LOCALHOST
+    # Allow binding to all interfaces
+    host = "" if options.address is None else options.address
+
     if options.role == 'client':
         client(host, options.port)
     elif options.role == 'server':
