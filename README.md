@@ -23,6 +23,11 @@ test runs and reporting back results.
 - [ ] Brainstorm approaches for collecting and demultiplexing device test data
 
 
+### Command-Line
+
+- [ ] Build minimal command-line interface for rapid prototyping
+
+
 ### GUI
 
 Check list for tasks producing graphic user interface.
