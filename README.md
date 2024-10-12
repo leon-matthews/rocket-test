@@ -16,7 +16,8 @@ test runs and reporting back results.
 
 - [*] Experiment with UDP client/server
 - [*] Experiment with UDP broadcasting
-- [ ] Experiment with UDP multicasting with DUT simulator
+- [*] Send discovery messages to DUT simulator with UDP multicasting
+- [ ] Receive discovery messages from DUT simulator
 - [ ] Collect list of devices on network via multicasting discovery messages
 - [ ] Send and recieve simple command to DUT via standard UDP networking
 - [ ] Brainstorm approaches for collecting and demultiplexing device test data
@@ -36,10 +37,10 @@ Check list for tasks producing graphic user interface.
 - [ ] Start with scrolling text area for logging messages
 - [ ] Add live plot of time against mV & mA
 - [ ] Stretch goal: add useful aggregates over colleted test data
-    * Min/Max peaks
-    * Averages (median and mean)?
-    * Stddev
-    * Maybe a nice box-and-whisker to visualise & compare above values?
+    - Min/Max peaks
+    - Averages (median and mean)?
+    - Stddev
+    - Maybe a nice box-and-whisker to visualise & compare above values?
 
 
 ## Notes

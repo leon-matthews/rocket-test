@@ -22,7 +22,7 @@ def server(address: str, port: int) -> None:
     """
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    # Required on Linux kernel >= 3.9 to run multiple servers at once
+    # Required on Linux kernel >= 3.9 to run multiple servers on same port
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
