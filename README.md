@@ -4,6 +4,8 @@
 Produce GUI for testing team to visualise the behivour of multiple devices
 simultaneously, using only the Python standard library and PyQt5.
 
+Requires at least Python 3.11, as it makes heavy use of optional static typing.
+
 
 ## Tasks
 
@@ -25,7 +27,8 @@ test runs and reporting back results.
 
 ### Command-Line
 
-- [ ] Build minimal command-line interface for rapid prototyping
+- [*] Build minimal command-line interface for rapid prototyping
+- [ ] Implement 'discover' subcommand
 
 
 ### GUI
