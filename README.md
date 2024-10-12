@@ -15,34 +15,51 @@ and extensibility.
 PyQt5 and at least Python 3.11, as it makes heavy use of optional static typing.
 
 
-## Usage
+## Graphical Interface
 
 The application is both a command-line and a GUI. If called with no arguments
 the GUI will start, eg.
-
-### GUI
 
     $ cd ~/Projects/rocket-test/
     $ python3 -m rocket_lab
     ...GUI will start...
 
-### Command-line
+
+## Command-line
+
+If any command-line arguments are given, an alternative text-only interface
+will be used. The command-line was built to ensure a rapid testing cycle.
+
+### Help
 
     $ cd ~/Projects/rocket-test/
     $ python3 -m rocket_lab --help
-    usage: rocket_lab [-h] {discover} ...
+    usage: rocket_lab [-h] [-v] COMMAND ...
 
     Rocket Lab Production Automation Coding Test
 
     positional arguments:
-      {discover}
-        discover  Find DUT simulators using UDP multicast
+      COMMAND
+        discover     Find devices on network via UDP multicast
+        test         Run test on the selected device
 
     options:
-      -h, --help  show this help message and exit
+      -h, --help     show this help message and exit
+      -v, --verbose  Enable debug logging output
 
     Run with zero aguments to start GUI
 
+### Discover
+
+    $ python3 -m rocket_lab discover
+    2 devices responded to discovery:
+    M001   SN0123457    192.168.0.10:6062
+    M001   SN0123456    192.168.0.10:6061
+
+### Test
+
+    $ python3 -m rocket_lab test 192.168.0.10:6062 -s 30
+    # TODO
 
 ## Tasks
 
@@ -66,6 +83,7 @@ test runs and reporting back results.
 
 - [x] Build minimal command-line interface for rapid prototyping
 - [x] Implement 'discover' subcommand
+- [ ] Implement 'test' subcommand
 
 
 ### GUI

@@ -204,13 +204,13 @@ class DataTest(TestCase):
         """
         Device sends status messages at some rate while test is running.
         """
-        message = b"STATUS;TIME=100;MV=3.332;MA=45;"
+        message = b"STATUS;TIME=100;MV=3332;MA=45;"
         data = Data.from_message(message)
         expected = Data(
             name='STATUS',
             data={
                 'TIME': '100',
-                'MV': '3.332',
+                'MV': '3332',
                 'MA': '45',
             }
         )

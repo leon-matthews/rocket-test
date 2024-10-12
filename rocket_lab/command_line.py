@@ -2,6 +2,7 @@
 Command-line argument parsing and subcommand implementation.
 """
 import argparse
+from argparse import ArgumentTypeError
 from pprint import pprint as pp
 from typing import TypeAlias
 
@@ -10,6 +11,37 @@ from .devices import Device
 
 
 Options: TypeAlias = argparse.Namespace
+
+
+def argparse_address_tuple(string: str) -> tuple[str, int]:
+    """
+    Convert and validate string argument containing IP address and port number.
+
+    Don't try and parse the IP address here, that will just double up the
+    processing done later.
+
+    Args:
+        string:
+            Colon-delimited address string, eg. '192.168.0.10:6062'
+
+    Raises:
+        argparse.ArgumentTypeError:
+            If path does not exist.
+
+    Returns:
+        2-tuple containing IP address and port number.
+    """
+    parts = string.rsplit(":", maxsplit=1)
+    address = parts[0]
+    port: int
+    try:
+        port = int(parts[1])
+    except IndexError:
+        raise ArgumentTypeError("Port number missing. Use colon to separate.")
+    except ValueError:
+        raise ArgumentTypeError(f"Invalid port number. Expected integer, given {parts[1]!r}")
+
+    return (address, port)
 
 
 def discover(options: Options) -> int:
@@ -74,6 +106,30 @@ def parse(arguments: list[str]) -> Options:
         default=1.0,
         type=float,
         help='seconds to wait for responses',
+    )
+
+    # ... 'test' command arguments
+    discover = subparsers.add_parser(
+        'test',
+        help='Run test on the selected device',
+    )
+    discover.add_argument(
+        '-d', '--duration',
+        default=10,
+        type=int,
+        help='seconds to run test for',
+    )
+    discover.add_argument(
+        '-r', '--rate',
+        default=100,
+        type=int,
+        help='milliseconds between status reports',
+    )
+    discover.add_argument(
+        dest='address',
+        metavar='ADDRESS:PORT',
+        type=argparse_address_tuple,
+        help="IP address and port number of device, eg. 192.168.0.10:6062"
     )
 
     options = parser.parse_args()
