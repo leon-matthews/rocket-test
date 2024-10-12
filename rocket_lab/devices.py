@@ -2,11 +2,14 @@
 Devices under test.
 """
 from dataclasses import dataclass
-from pprint import pprint as pp
+import logging
 from typing import Self
 
 from . import DEFAULT_ENCODING
 from .networking import Datagram
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(eq=True, frozen=True)
@@ -55,7 +58,7 @@ class Data:
                 raise ValueError(f"Could not parse {part} from {binary!r}")
 
         if not name:
-            raise ValueError(f"Empty message")
+            raise ValueError("Empty message")
 
         return Data(name, data)
 
