@@ -24,10 +24,10 @@ Planned actions to complete project.
 Handle stream of multiplexed output from multiple, concurrent devices performing
 test runs and reporting back results.
 
-- [*] Experiment with UDP client/server
-- [*] Experiment with UDP broadcasting
-- [*] Send discovery messages to DUT simulator with UDP multicasting
-- [*] Receive discovery messages from DUT simulator
+- [x] Experiment with UDP client/server
+- [x] Experiment with UDP broadcasting
+- [x] Send discovery messages to DUT simulator with UDP multicasting
+- [x] Receive discovery messages from DUT simulator
 - [ ] Build list of devices on network via multicasting discovery messages
 - [ ] Send and recieve simple command to DUT via standard UDP networking
 - [ ] Brainstorm approaches for collecting and demultiplexing device test data
@@ -35,7 +35,7 @@ test runs and reporting back results.
 
 ### Command-Line
 
-- [*] Build minimal command-line interface for rapid prototyping
+- [x] Build minimal command-line interface for rapid prototyping
 - [ ] Implement 'discover' subcommand
 
 
@@ -43,7 +43,7 @@ test runs and reporting back results.
 
 Check list for tasks producing graphic user interface.
 
-- [ ] Produce paper sketch of GUI elements
+- [x] Produce paper sketch of GUI elements
 - [ ] List devices in navigation
 - [ ] Show current state of tests in navigation
 - [ ] Detail view for devices and its collected test data
