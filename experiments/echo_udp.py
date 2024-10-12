@@ -2,6 +2,23 @@
 """
 Slightly over-engineered UDP echo client and server, to get myself back
 into the raw socket networking game!
+
+Promiscuous UDP client
+
+There are two modes of operation for UDP client code. Promiscuous and not. The
+former will accept an UDP datagram to the client port from anywhere, the latter
+rejects messages not from the server previously connected to.
+
+    # Careful
+    s.connect() -> s.send() -> s.recv()
+
+    # Promiscuous
+    sock.sendto() -> sock.recvfrom()
+
+
+I've implemented both approaches in the echo server as `careful_client()` and
+`promiscuous_client()`, as I'm not yet sure which will prove the most useful
+for the final program.
 """
 import argparse
 import logging

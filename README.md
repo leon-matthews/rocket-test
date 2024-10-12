@@ -10,9 +10,38 @@ if I were to paid to build this sort of progam - with an eye on testability
 and extensibility.
 
 
-# Requirements
+## Requirements
 
 PyQt5 and at least Python 3.11, as it makes heavy use of optional static typing.
+
+
+## Usage
+
+The application is both a command-line and a GUI. If called with no arguments
+the GUI will start, eg.
+
+### GUI
+
+    $ cd ~/Projects/rocket-test/
+    $ python3 -m rocket_lab
+    ...GUI will start...
+
+### Command-line
+
+    $ cd ~/Projects/rocket-test/
+    $ python3 -m rocket_lab --help
+    usage: rocket_lab [-h] {discover} ...
+
+    Rocket Lab Production Automation Coding Test
+
+    positional arguments:
+      {discover}
+        discover  Find DUT simulators using UDP multicast
+
+    options:
+      -h, --help  show this help message and exit
+
+    Run with zero aguments to start GUI
 
 
 ## Tasks
@@ -36,7 +65,7 @@ test runs and reporting back results.
 ### Command-Line
 
 - [x] Build minimal command-line interface for rapid prototyping
-- [ ] Implement 'discover' subcommand
+- [x] Implement 'discover' subcommand
 
 
 ### GUI
@@ -57,25 +86,3 @@ Check list for tasks producing graphic user interface.
     - Averages (median and mean)?
     - Stddev
     - Maybe a nice box-and-whisker to visualise & compare above values?
-
-
-## Notes
-
-My working notes. Internal use only.
-
-### Promiscuous UDP client
-
-There are two modes of operation for UDP client code. Promiscuous and not. The
-former will accept an UDP datagram to the client port from anywhere, the latter
-rejects messages not from the server previously connected to.
-
-    # Careful
-    s.connect() -> s.send() -> s.recv()
-
-    # Promiscuous
-    sock.sendto() -> sock.recvfrom()
-
-
-I've implemented both approaches in the echo server as `careful_client()` and
-`promiscuous_client()`, as I'm not yet sure which will prove the most useful
-for the final program.

@@ -6,6 +6,7 @@ from rocket_lab.devices import Data, Device
 from rocket_lab.networking import Datagram
 
 
+# From device
 DEVICE_DISCOVERY = Datagram(
     address='192.168.0.10',
     port=6062,

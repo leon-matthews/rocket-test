@@ -35,6 +35,7 @@ def multicast_client(
     Returns:
         None
     """
+    logging.info(f"Send multicast UDP discovery message to find devices")
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     sock.setsockopt(
         socket.IPPROTO_IP,
@@ -44,13 +45,14 @@ def multicast_client(
     sock.settimeout(timeout)
 
     sock.sendto(message, (address, port))
-    logging.debug(f"send {message} to {address!r}:{port}")
+    logging.debug(f"Sent %r to %r:%r", message, address, port)
 
     # Block for `timeout` seconds to collect multicast responses
     datagrams = []
     try:
         while True:
             data, address = sock.recvfrom(UDP_MAX_BYTES)
+            logging.debug(f"Got  %r from %r", data, address)
             datagrams.append(Datagram(*address, data))
     except TimeoutError:
         pass

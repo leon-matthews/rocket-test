@@ -96,8 +96,12 @@ class Device:
         the DUT, eg. "ID;MODEL=M001;SERIAL=SN0123457;"
 
         Args:
-            data:
+            datagram:
                 Networking Datagram namedtuple
+
+        Raises:
+            RuntimeError:
+                If problems encountered parsing device data.
 
         Returns:
             Device instance.
@@ -105,7 +109,37 @@ class Device:
         address = datagram.address
         port = datagram.port
 
-        data = Data.from_message(datagram.message)
-        model = data.data['MODEL']
-        serial = data.data['SERIAL']
+        try:
+            data = Data.from_message(datagram.message)
+            model = data.data['MODEL']
+            serial = data.data['SERIAL']
+        except KeyError as e:
+            raise RuntimeError(f"Device data missing: {e} not found")
+        except ValueError as e:
+            raise RuntimeError(f"Device data error: {e}")
+
         return Device(address, port, model, serial)
+
+    @classmethod
+    def from_datagrams(cls, datagrams: list[Datagram]) -> list[Self]:
+        """
+        Create list of device instances by parsing list of datagrams.
+
+        Catches and logs errors, returning only list of valid devices.
+
+        Args:
+            datagrams:
+                List of networking Datagram namedtuples.
+
+        Returns:
+            List of device instances.
+        """
+        devices = []
+        for datum in datagrams:
+            try:
+                device = Device.from_datagram(datum)
+            except RuntimeError as e:
+                logger.error("%s", e)
+            else:
+                devices.append(device)
+        return devices
