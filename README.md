@@ -17,8 +17,8 @@ test runs and reporting back results.
 - [*] Experiment with UDP client/server
 - [*] Experiment with UDP broadcasting
 - [*] Send discovery messages to DUT simulator with UDP multicasting
-- [ ] Receive discovery messages from DUT simulator
-- [ ] Collect list of devices on network via multicasting discovery messages
+- [*] Receive discovery messages from DUT simulator
+- [ ] Build list of devices on network via multicasting discovery messages
 - [ ] Send and recieve simple command to DUT via standard UDP networking
 - [ ] Brainstorm approaches for collecting and demultiplexing device test data
 
