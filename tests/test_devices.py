@@ -30,6 +30,60 @@ class DataTest(TestCase):
         with self.assertRaisesRegex(ValueError, message):
             Data.from_message(b"ID;MODEL=M001=M002;SERIAL=SN0123456;")
 
+    def test_to_string(self) -> None:
+        """
+        Serialise data into unicode string.
+        """
+        data = Data(
+            name='STATUS',
+            data={
+                'TIME': '100',
+                'MV': '3.332',
+                'MA': '45',
+            }
+        )
+        string = data.to_string()
+        expected = "STATUS;TIME=100;MV=3.332;MA=45;"
+        self.assertEqual(string, expected)
+
+    def test_to_bytes(self) -> None:
+        """
+        Encode serialised data into binary string with `DEFAULT_ENCODING`.
+        """
+        data = Data(
+            name='STATUS',
+            data={
+                'TIME': '100',
+                'MV': '3.332',
+                'MA': '45',
+            }
+        )
+        binary = data.to_bytes()
+        expected = b"STATUS;TIME=100;MV=3.332;MA=45;"
+        self.assertEqual(binary, expected)
+
+    def test_to_bytes_round_trip(self) -> None:
+        """
+        Ensure data survives being parsed then encoded again.
+        """
+        device_message = b"STATUS;TIME=100;MV=3.332;MA=45;"
+        expected_data = Data(
+            name='STATUS',
+            data={
+                'TIME': '100',
+                'MV': '3.332',
+                'MA': '45',
+            }
+        )
+
+        # Parse
+        data = Data.from_message(device_message)
+        self.assertEqual(data, expected_data)
+
+        # Re-encode
+        binary = data.to_bytes()
+        self.assertEqual(binary, device_message)
+
     def test_discovery(self) -> None:
         """
         Extract data from valid discovery message.

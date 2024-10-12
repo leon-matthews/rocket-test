@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pprint import pprint as pp
 from typing import Self
 
+from . import DEFAULT_ENCODING
 from .networking import Datagram
 
 
@@ -39,7 +40,7 @@ class Data:
         Returns:
             Data instance
         """
-        string = binary.decode('utf-8', errors='replace')
+        string = binary.decode(DEFAULT_ENCODING, errors='replace')
         parts = string.split(";")
         name = parts[0]
         data = {}
@@ -57,6 +58,26 @@ class Data:
             raise ValueError(f"Empty message")
 
         return Data(name, data)
+
+    def to_string(self) -> str:
+        """
+        Serialise data to semi-colon delimited string.
+        """
+        # Serialise name and key/value pairs
+        parts = [self.name]
+        for k, v in self.data.items():
+            parts.append(f"{k}={v}")
+
+        # Insert semicolons, including one at end of message!
+        parts = [f"{part};" for part in parts]
+        string = "".join(parts)
+        return string
+
+    def to_bytes(self) -> bytes:
+        """
+        Serialise data to byte string.
+        """
+        return self.to_string().encode(DEFAULT_ENCODING, errors="replace")
 
 
 @dataclass(eq=True, frozen=True)

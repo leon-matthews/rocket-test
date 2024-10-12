@@ -6,7 +6,7 @@ from collections import namedtuple
 import logging
 import socket
 
-from . import MULTICAST_TTL, UDP_MAX_BYTES
+from . import DEFAULT_MULTICAST_TTL, UDP_MAX_BYTES
 
 
 Datagram = namedtuple("Datagram", "address port message")
@@ -36,7 +36,11 @@ def multicast_client(
         None
     """
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-    sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, MULTICAST_TTL)
+    sock.setsockopt(
+        socket.IPPROTO_IP,
+        socket.IP_MULTICAST_TTL,
+        DEFAULT_MULTICAST_TTL,
+    )
     sock.settimeout(timeout)
 
     sock.sendto(message, (address, port))

@@ -4,7 +4,15 @@
 Produce GUI for testing team to visualise the behivour of multiple devices
 simultaneously, using only the Python standard library and PyQt5.
 
-Requires at least Python 3.11, as it makes heavy use of optional static typing.
+I have allowed myself the weekend to complete the task. Despite the short
+timeframe, I have done my best to produce the sort of work I would produce
+if I were to paid to build this sort of progam - with an eye on testability
+and extensibility.
+
+
+# Requirements
+
+PyQt5 and at least Python 3.11, as it makes heavy use of optional static typing.
 
 
 ## Tasks
