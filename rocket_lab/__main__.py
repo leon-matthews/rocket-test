@@ -32,10 +32,9 @@ def start_gui() -> int:
 
 
 if __name__ == '__main__':
+    options = command_line.parse(sys.argv)
     logging.basicConfig(
         format="%(levelname)-7s %(message)s",
-        level=logging.DEBUG,
+        level=logging.DEBUG if options.verbose else logging.INFO,
     )
-
-    options = command_line.parse(sys.argv)
     sys.exit(main(options))

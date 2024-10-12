@@ -48,18 +48,23 @@ def parse(arguments: list[str]) -> Options:
     Returns:
         Options extracted from given arguments.
     """
-    # Top-level parser
+    # Global arguments
     parser = argparse.ArgumentParser(
         prog="rocket_lab",
         description="Rocket Lab Production Automation Coding Test",
         epilog="Run with zero aguments to start GUI",
     )
+    parser.add_argument(
+        '-v', '--verbose', action='store_true',
+        help="Enable debug logging output")
+
+    # Subcommands...
     subparsers = parser.add_subparsers(
         dest='command',
         metavar="COMMAND",
     )
 
-    # Parser for 'discover' command
+    # ...'discover' command arguments
     discover = subparsers.add_parser(
         'discover',
         help='Find devices on network via UDP multicast',
