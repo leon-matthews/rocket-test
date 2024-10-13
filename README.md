@@ -74,8 +74,9 @@ test runs and reporting back results.
 - [x] Experiment with UDP broadcasting
 - [x] Send discovery messages to DUT simulator with UDP multicasting
 - [x] Receive discovery messages from DUT simulator
-- [ ] Build list of devices on network via multicasting discovery messages
-- [ ] Send and recieve simple command to DUT via standard UDP networking
+- [x] Build list of devices on network via multicasting discovery messages
+- [x] Send and recieve simple command to DUT via standard UDP networking
+- [x] Start test and recieve test data, sending back to caller via generators
 - [ ] Brainstorm approaches for collecting and demultiplexing device test data
 
 
@@ -83,7 +84,7 @@ test runs and reporting back results.
 
 - [x] Build minimal command-line interface for rapid prototyping
 - [x] Implement 'discover' subcommand
-- [ ] Implement 'test' subcommand
+- [x] Implement 'test' subcommand
 
 
 ### GUI

@@ -2,8 +2,10 @@
 from pprint import pprint as pp
 from unittest import skip, TestCase
 
-from rocket_lab.devices import Data, Device
+from rocket_lab.data import DeviceMessage
+from rocket_lab.devices import Device
 from rocket_lab.networking import Datagram
+
 
 
 # From device
@@ -14,14 +16,14 @@ DEVICE_DISCOVERY = Datagram(
 )
 
 
-class DataTest(TestCase):
+class DeviceMessageTest(TestCase):
     def test_empty(self) -> None:
         """
         ValueError raised if message contains no data.
         """
         message = r"^Empty message$"
         with self.assertRaisesRegex(ValueError, message):
-            Data.from_message(b"")
+            DeviceMessage.from_bytes(b"")
 
     def test_invalid(self) -> None:
         """
@@ -29,13 +31,13 @@ class DataTest(TestCase):
         """
         message = r"Could not parse MODEL=M001=M002 from b'ID;MODEL=M001=M002;SERIAL=SN0123456;'"
         with self.assertRaisesRegex(ValueError, message):
-            Data.from_message(b"ID;MODEL=M001=M002;SERIAL=SN0123456;")
+            DeviceMessage.from_bytes(b"ID;MODEL=M001=M002;SERIAL=SN0123456;")
 
     def test_to_string(self) -> None:
         """
         Serialise data into unicode string.
         """
-        data = Data(
+        data = DeviceMessage(
             name='STATUS',
             data={
                 'TIME': '100',
@@ -51,7 +53,7 @@ class DataTest(TestCase):
         """
         Encode serialised data into binary string with `DEFAULT_ENCODING`.
         """
-        data = Data(
+        data = DeviceMessage(
             name='STATUS',
             data={
                 'TIME': '100',
@@ -68,7 +70,7 @@ class DataTest(TestCase):
         Ensure data survives being parsed then encoded again.
         """
         device_message = b"STATUS;TIME=100;MV=3.332;MA=45;"
-        expected_data = Data(
+        expected_data = DeviceMessage(
             name='STATUS',
             data={
                 'TIME': '100',
@@ -78,7 +80,7 @@ class DataTest(TestCase):
         )
 
         # Parse
-        data = Data.from_message(device_message)
+        data = DeviceMessage.from_bytes(device_message)
         self.assertEqual(data, expected_data)
 
         # Re-encode
@@ -89,24 +91,24 @@ class DataTest(TestCase):
         """
         Extract data from valid discovery message.
         """
-        data = Data.from_message(b"ID;MODEL=M001;SERIAL=SN0123456;")
-        expected = Data(
+        data = DeviceMessage.from_bytes(b"ID;MODEL=M001;SERIAL=SN0123456;")
+        expected = DeviceMessage(
             name='ID',
             data={'MODEL': 'M001', 'SERIAL': 'SN0123456'},
         )
         self.assertEqual(data, expected)
 
     def test_discovery_outgoing(self) -> None:
-        data = Data.from_message(b"ID;")
-        expected = Data(
+        data = DeviceMessage.from_bytes(b"ID;")
+        expected = DeviceMessage(
             name='ID',
             data={},
         )
         self.assertEqual(data, expected)
 
     def test_discovery_no_semicolon(self) -> None:
-        data = Data.from_message(b"ID")
-        expected = Data(
+        data = DeviceMessage.from_bytes(b"ID")
+        expected = DeviceMessage(
             name='ID',
             data={},
         )
@@ -117,8 +119,8 @@ class DataTest(TestCase):
         Command device to start test.
         """
         message = b"TEST;CMD=START;DURATION=30;RATE=100;"
-        data = Data.from_message(message)
-        expected = Data(
+        data = DeviceMessage.from_bytes(message)
+        expected = DeviceMessage(
             name='TEST',
             data={
                 'CMD': 'START',
@@ -133,8 +135,8 @@ class DataTest(TestCase):
         Command device to stop test.
         """
         message = b"TEST;CMD=STOP;"
-        data = Data.from_message(message)
-        expected = Data(
+        data = DeviceMessage.from_bytes(message)
+        expected = DeviceMessage(
             name='TEST',
             data={
                 'CMD': 'STOP',
@@ -147,8 +149,8 @@ class DataTest(TestCase):
         Device reports that test started successfully.
         """
         message = b"TEST;RESULT=STARTED;"
-        data = Data.from_message(message)
-        expected = Data(
+        data = DeviceMessage.from_bytes(message)
+        expected = DeviceMessage(
             name='TEST',
             data={
                 'RESULT': 'STARTED',
@@ -161,8 +163,8 @@ class DataTest(TestCase):
         Device reports that test stopped successfully.
         """
         message = b"TEST;RESULT=STOPPED;"
-        data = Data.from_message(message)
-        expected = Data(
+        data = DeviceMessage.from_bytes(message)
+        expected = DeviceMessage(
             name='TEST',
             data={
                 'RESULT': 'STOPPED',
@@ -176,8 +178,8 @@ class DataTest(TestCase):
         Device reports that test was already running.
         """
         message = b"TEST;RESULT=error;MSG=reason;"
-        data = Data.from_message(message)
-        expected = Data(
+        data = DeviceMessage.from_bytes(message)
+        expected = DeviceMessage(
             name='TEST',
             data={
                 'RESULT': 'STOPPED',
@@ -191,8 +193,8 @@ class DataTest(TestCase):
         Device reports that test was already stopped.
         """
         message = b"TEST;RESULT=error;MSG=reason;"
-        data = Data.from_message(message)
-        expected = Data(
+        data = DeviceMessage.from_bytes(message)
+        expected = DeviceMessage(
             name='TEST',
             data={
                 'RESULT': 'STOPPED',
@@ -205,8 +207,8 @@ class DataTest(TestCase):
         Device sends status messages at some rate while test is running.
         """
         message = b"STATUS;TIME=100;MV=3332;MA=45;"
-        data = Data.from_message(message)
-        expected = Data(
+        data = DeviceMessage.from_bytes(message)
+        expected = DeviceMessage(
             name='STATUS',
             data={
                 'TIME': '100',
@@ -221,8 +223,8 @@ class DataTest(TestCase):
         Device reports idle state after test stops for any reason.
         """
         message = b"STATUS;STATE=IDLE;"
-        data = Data.from_message(message)
-        expected = Data(
+        data = DeviceMessage.from_bytes(message)
+        expected = DeviceMessage(
             name='STATUS',
             data={
                 'STATE': 'IDLE',
