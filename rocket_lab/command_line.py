@@ -7,6 +7,7 @@ from pprint import pprint as pp
 from typing import TypeAlias
 
 from . import networking, DEFAULT_MULTICAST_IP, DEFAULT_MULTICAST_PORT
+from .data import StatusData
 from .devices import Device
 
 
@@ -39,7 +40,9 @@ def argparse_address_tuple(string: str) -> tuple[str, int]:
     except IndexError:
         raise ArgumentTypeError("Port number missing. Use colon to separate.")
     except ValueError:
-        raise ArgumentTypeError(f"Invalid port number. Expected integer, given {parts[1]!r}")
+        raise ArgumentTypeError(
+            f"Invalid port number. Expected integer, given {parts[1]!r}"
+        )
 
     return (address, port)
 
@@ -56,7 +59,7 @@ def discover(options: Options) -> int:
         Zero if command completed successfully.
     """
     # Send multicast, collect responses
-    found = networking.multicast_client(
+    found = networking.udp_multicast_client(
         DEFAULT_MULTICAST_IP,
         DEFAULT_MULTICAST_PORT, b"ID;",
         timeout=options.timeout,
@@ -67,6 +70,37 @@ def discover(options: Options) -> int:
     print(f"{len(devices)} devices responded to discovery:")
     for device in devices:
         print(f"{device.model:<6} {device.serial:<12} {device.address}:{device.port}")
+
+
+def test(options: Options) -> int:
+    """
+    Implement 'test' subcommand for devices.
+
+    Args:
+        options:
+            From command line, including default values.
+
+    Returns:
+        Zero if command completed successfully.
+    """
+    address, port = options.address
+    duration = options.duration
+    rate = options.rate
+    print(f"Start test on {address}:{port} for {duration}s, status every {rate}ms")
+
+    runner = networking.run_test(
+        address,
+        port,
+        duration,
+        rate,
+        timeout=options.timeout,
+    )
+
+    for message in runner:
+        status = StatusData.from_message(message)
+        ma = f"{status.ma:,.2f}mA"
+        mv = f"{status.mv:,.2f}mV"
+        print(f"{status.time*1000:>6,.0f} milliseconds: {ma:>12} {mv:>12}")
 
 
 def parse(arguments: list[str]) -> Options:
@@ -87,6 +121,12 @@ def parse(arguments: list[str]) -> Options:
         epilog="Run with zero aguments to start GUI",
     )
     parser.add_argument(
+        '-t', '--timeout',
+        default=1.0,
+        type=float,
+        help='Seconds to wait for response',
+    )
+    parser.add_argument(
         '-v', '--verbose', action='store_true',
         help="Enable debug logging output")
 
@@ -101,12 +141,6 @@ def parse(arguments: list[str]) -> Options:
         'discover',
         help='Find devices on network via UDP multicast',
     )
-    discover.add_argument(
-        '-t', '--timeout',
-        default=1.0,
-        type=float,
-        help='seconds to wait for responses',
-    )
 
     # ... 'test' command arguments
     discover = subparsers.add_parser(
@@ -115,7 +149,7 @@ def parse(arguments: list[str]) -> Options:
     )
     discover.add_argument(
         '-d', '--duration',
-        default=10,
+        default=2,
         type=int,
         help='seconds to run test for',
     )

@@ -22,6 +22,8 @@ def main(options: command_line.Options) -> int:
     match options.command:
         case 'discover':
             return command_line.discover(options)
+        case 'test':
+            return command_line.test(options)
         case _:
             return start_gui()
 
