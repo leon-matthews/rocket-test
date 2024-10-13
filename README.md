@@ -4,10 +4,9 @@
 Produce GUI for testing team to visualise the behivour of multiple devices
 simultaneously, using only the Python standard library and PyQt5.
 
-I have allowed myself the weekend to complete the task. Despite the short
-timeframe, I have done my best to produce the sort of work I would produce
-if I were to paid to build this sort of progam - with an eye on testability
-and extensibility.
+In my eagerness to impress I have gone through too many cycles of refactoring
+and rather over-engineered the app, I'm sorry about that! That said, I'm quite
+happy about how the data conversion and optional extra command-line came out.
 
 
 ## Requirements
@@ -92,6 +91,7 @@ test runs and reporting back results.
 Check list for tasks producing graphic user interface.
 
 - [x] Produce paper sketch of GUI elements
+- [x] Produce prototype of GUI layout
 - [ ] List devices in navigation
 - [ ] Show current state of tests in navigation
 - [ ] Detail view for devices and its collected test data
