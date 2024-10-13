@@ -1,12 +1,28 @@
 """
-Parse and validate data into read-only dataclasses.
+Parse and validate data from devices into read-only dataclasses.
+
+There is a hierachy of dataclasses, which each level performing some amount
+of parsing and transformation:
+
+    Bytes from device ->
+        Interpret as string using `DEFAULT_ENCODING` (currently ISO-8859-1) ->
+            DeviceMessage (parse semicolon delimited string) ->
+                StatusData (extract and convert fields from DeviceMessage)
+                DeviceData (extract and convert fields from DeviceMessage)
+
+At every level a ValueError may be raised containing details about what
+went wrong. Callers must ensure that the handle that exception.
 """
 
+from collections import namedtuple
 from dataclasses import dataclass
 from pprint import pprint as pp
 from typing import Self
 
 from . import DEFAULT_ENCODING
+
+
+Datagram = namedtuple("Datagram", "address port data")
 
 
 @dataclass(eq=True, frozen=True, slots=True)
@@ -81,6 +97,71 @@ class DeviceMessage:
 
 
 @dataclass(eq=True, frozen=True, slots=True)
+class DiscoveryData:
+    address: str
+    port: int
+    model: str
+    serial: str
+
+    @classmethod
+    def from_datagram(cls, datagram: Datagram) -> Self:
+        """
+        Create instance from a discovery response.
+
+        The datagram's message field should contain discovery data from
+        the DUT, eg. "ID;MODEL=M001;SERIAL=SN0123457;"
+
+        Args:
+            datagram:
+                Datagram tuple from networking module.
+
+        Raises:
+            RuntimeError:
+                If problems encountered parsing device data.
+
+        Returns:
+            Device instance.
+        """
+        address = datagram.address
+        port = datagram.port
+        message = DeviceMessage.from_bytes(datagram.data)
+
+        try:
+            model = message.data['MODEL']
+            serial = message.data['SERIAL']
+        except KeyError as e:
+            raise RuntimeError(f"Device data missing: {e} not found")
+        except ValueError as e:
+            raise RuntimeError(f"Device data error: {e}")
+
+        return DiscoveryData(address, port, model, serial)
+
+    @classmethod
+    def from_datagrams(cls, datagrams: list[Datagram]) -> list[Self]:
+        """
+        Create list of device instances by parsing list of datagrams.
+
+        Catches and logs errors, returning only list of valid devices.
+
+        Args:
+            datagram:
+                List of datagram tuples from networking module.
+
+        Returns:
+            List of device instances.
+        """
+        devices = []
+        for datagram in datagrams:
+            try:
+                device = DiscoveryData.from_datagram(datagram)
+            except RuntimeError as e:
+                logger.error("%s", e)
+            else:
+                devices.append(device)
+        return devices
+
+
+@dataclass(eq=True, frozen=True, slots=True)
 class StatusData:
     """
     A single status message from a device test.
@@ -93,6 +174,10 @@ class StatusData:
     def from_message(self, message: DeviceMessage) -> Self:
         """
         Parse and convert a test's status data from a device message.
+
+        Args:
+            message:
+                Parsed message from device
 
         Raises:
             ValueError:

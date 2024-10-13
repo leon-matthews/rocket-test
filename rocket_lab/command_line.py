@@ -7,9 +7,7 @@ from pprint import pprint as pp
 from typing import TypeAlias
 
 from . import networking, DEFAULT_MULTICAST_IP, DEFAULT_MULTICAST_PORT
-from .data import StatusData
-from .devices import Device
-
+from .data import DiscoveryData, StatusData
 
 Options: TypeAlias = argparse.Namespace
 
@@ -66,7 +64,7 @@ def discover(options: Options) -> int:
     )
 
     # Parse and print device details
-    devices = Device.from_datagrams(found)
+    devices = DiscoveryData.from_datagrams(found)
     print(f"{len(devices)} devices responded to discovery:")
     for device in devices:
         print(f"{device.model:<6} {device.serial:<12} {device.address}:{device.port}")

@@ -8,12 +8,11 @@ from pprint import pprint as pp
 import socket
 from typing import Iterator
 
-from .data import DeviceMessage
+from .data import Datagram, DeviceMessage
 
 from . import DEFAULT_MULTICAST_TTL, UDP_MAX_BYTES
 
 
-Datagram = namedtuple("Datagram", "address port message")
 logger = logging.getLogger(__name__)
 
 
