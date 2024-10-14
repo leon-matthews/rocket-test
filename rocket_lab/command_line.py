@@ -97,11 +97,29 @@ def run_device_test(options: Options) -> int:
         rate,
         timeout=options.timeout,
     )
+    ma_history = []
+    mv_history = []
     for message in runner:
         status = StatusData.from_message(message)
+        ma_history.append(status.ma)
+        mv_history.append(status.mv)
         ma = f"{status.ma:,.2f}mA"
         mv = f"{status.mv:,.2f}mV"
         print(f"{status.time*1000:>6,.0f} milliseconds: {ma:>12} {mv:>12}")
+
+    # Print aggregate data
+    def aggregates(values: list[float]) -> (str, str, str):
+        """
+        Calcuate, format, and return mean, max, and min - and in that order.
+        """
+        mean = sum(values) / len(values)
+        return (f"{mean:,.2f}", f"{max(values):,.2f}", f"{min(values):,.2f}")
+
+    ma_mean, ma_max, ma_min  = aggregates(ma_history)
+    print(f"Current mean {ma_mean}mA, max {ma_max}mA, min {ma_min}mA")
+
+    mv_mean, mv_max, mv_min  = aggregates(mv_history)
+    print(f"Voltage mean  {mv_mean}mV, max {mv_max}mV, min {mv_min}mV")
 
 
 def parse(arguments: list[str]) -> Options:
