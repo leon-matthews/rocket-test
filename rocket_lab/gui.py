@@ -1,5 +1,10 @@
+"""
+Create PyQT5 GUI for running device tests and collecting resultant data.
 
+CamelCase style should be used in this module to match the PyQT5 API style.
+"""
 import logging
+from pprint import pprint as pp
 
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtWidgets import (
@@ -10,26 +15,25 @@ from PyQt5.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QStackedLayout,
     QVBoxLayout,
     QWidget,
 )
 
-
-from .command_line import Options
-from .data import DiscoveryData
+from . import command_line, networking
+from .data import DiscoveryData as Device, StatusData
 
 
 logger = logging.getLogger(__name__)
 
 
-def main(options: Options) -> int:
+def main(options: command_line.Options) -> int:
     """
     Start GUI.
     """
     logger.info("Starting GUI...")
     app = QApplication([])
-    devices = []
-    window = MainWindow(devices)
+    window = MainWindow(options)
     window.show()
     app.exec()
     return 0
@@ -48,29 +52,36 @@ class MainWindow(QWidget):
     top of each other in a QStackedLayout. Buttons in the navigation bring
     them to the top of the stack.
     """
-    def __init__(self, devices: list[DiscoveryData]):
+    def __init__(self, options: command_line.Options):
         super().__init__()
-        self.setWindowTitle("Leon's Rocket Lab Production Automation Test")
-        self.layout()
+        self.options = options
+        self.devices = self.findDevices(timeout=0.2)
 
-    def layout(self):
-        """
-        Create window layout, creating subwidgets.
-        """
-        # Sensible sizes to start
+        # Main window
+        self.setWindowTitle("Leon's Rocket Lab Production Automation Test")
         self.setMinimumSize(QSize(600, 300))
         self.resize(QSize(900, 600))
 
-        # Navigation on left
+        # Layout navigation and device details
         layout = QHBoxLayout()
-        self.navigation = NavigationLayout()
+
+        self.navigation = Navigation(self.devices)
         layout.addLayout(self.navigation)
 
-        # Details on the right
-        details = DetailLayout()
-        layout.addLayout(details, stretch=1)
+        self.details = DeviceDetails()
+        layout.addLayout(self.details, stretch=1)
 
         self.setLayout(layout)
+
+    def findDevices(self, *, timeout: float) -> list[Device]:
+        """
+        Search for devices using multicast UDP networking.
+        """
+        multicast_ip, multicast_port = self.options.multicast
+        devices = networking.discover_devices(
+            multicast_ip, multicast_port, timeout=timeout,
+        )
+        return devices
 
 
 class Aggregates(QVBoxLayout):
@@ -85,7 +96,11 @@ class Aggregates(QVBoxLayout):
         return label
 
 
-class DetailLayout(QVBoxLayout):
+class DeviceDetailsStack(QStackedLayout):
+    pass
+
+
+class DeviceDetails(QVBoxLayout):
     """
     Hold device and its test details.
     """
@@ -136,42 +151,50 @@ class DetailLayout(QVBoxLayout):
         self.addLayout(layout)
 
 
-class DeviceButton(QPushButton):
+class Navigation(QVBoxLayout):
     """
-    Button to navigate to a device's details.
+    Hold buttons to navigation between devices.
     """
-    def __init__(self, model: str, serial: str):
-        super().__init__()
-        self.model = model
-        self.serial = serial
-        self.setText(f"Device {model}\n{serial}")
-        self.setCheckable(True)
+    def __init__(self, devices: list[Device]):
+        """
+        Initialise navigation.
 
+        Build one button for each given device.
 
-class NavigationLayout(QVBoxLayout):
-    """
-    Hold buttons to navigation between devices
-    """
-    def __init__(self):
+        Args:
+            devices:
+                List of devices discovered on network.
+        """
         super().__init__()
         self.setAlignment(Qt.AlignTop)
+        self.devices = []               # Start with an empty devices list
+        self.create_layout(devices)
 
+    def create_layout(self, devices: list[Device]):
         # Buttons
-        self.addDeviceButton("M001", "SN0123456")
-        self.addSpacing(10)
-        self.addDeviceButton("M001", "SN0123457")
-        self.addSpacing(10)
-        self.addDeviceButton("M002", "SN024457")
+        self.updateDeviceButtons(devices)
 
         # Refresh
         self.addStretch(10)
         self.addWidget(QPushButton("Refresh Device List"))
 
-    def addDeviceButton(self, model: str, serial: str) -> QPushButton:
-        button = QPushButton(f"Device {model} {serial}")
+    def addDeviceButton(self, device: Device) -> QPushButton:
+        button = QPushButton(f"Device {device.model} {device.serial}")
         button.setStyleSheet("padding: 20px;")
         button.setCheckable(True)
         self.addWidget(button)
+
+    def updateDeviceButtons(self, devices: list[Device]):
+        """
+        Add/remove buttons from navigation using new list of devices.
+
+        If new list of devices matches old, nothing changes. Internal cache
+        of devices is updated.
+        """
+        for device in devices:
+            self.addDeviceButton(device)
+            self.addSpacing(10)
+        self.devices = devices
 
 
 class StartForm(QFormLayout):

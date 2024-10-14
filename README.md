@@ -93,7 +93,7 @@ Check list for tasks producing graphic user interface.
 
 - [x] Produce paper sketch of GUI elements
 - [x] Produce prototype of GUI layout
-- [ ] List devices in navigation
+- [x] List devices in navigation
 - [ ] Show current state of tests in navigation
 - [ ] Detail view for devices and its collected test data
 - [ ] Show current state of tests in detail area
