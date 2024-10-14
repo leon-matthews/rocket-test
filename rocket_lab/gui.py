@@ -3,12 +3,14 @@ Create PyQT5 GUI for running device tests and collecting resultant data.
 
 CamelCase style should be used in this module to match the PyQT5 API style.
 """
+from functools import partial
 import logging
 from pprint import pprint as pp
 
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtWidgets import (
     QApplication,
+    QButtonGroup,
     QFormLayout,
     QFrame,
     QHBoxLayout,
@@ -82,6 +84,14 @@ class MainWindow(QWidget):
             multicast_ip, multicast_port, timeout=timeout,
         )
         return devices
+
+    def selectDevice(self, device: Device):
+        """
+        User has selected the given device.
+
+        Bring its DeviceDetails instance to the top of the DeviceDetailsStack.
+        """
+        logger.info(f"Show details for {device.model} {device.serial}")
 
 
 class Aggregates(QVBoxLayout):
@@ -167,34 +177,49 @@ class Navigation(QVBoxLayout):
         """
         super().__init__()
         self.setAlignment(Qt.AlignTop)
-        self.devices = []               # Start with an empty devices list
-        self.create_layout(devices)
+        self.devices = devices
+        self._create_layout()
 
-    def create_layout(self, devices: list[Device]):
-        # Buttons
-        self.updateDeviceButtons(devices)
+    def _create_layout(self):
+        # Device buttons
+        self.buttonGroup = QButtonGroup()
+        self.buttonGroup.setExclusive(True)
+        self.buttonGroup.buttonClicked.connect(self.deviceButtonClicked)
+        self.updateButtonGroup()
 
-        # Refresh
-        self.addStretch(10)
+        # Refresh button
+        self.addStretch(1)
         self.addWidget(QPushButton("Refresh Device List"))
 
-    def addDeviceButton(self, device: Device) -> QPushButton:
-        button = QPushButton(f"Device {device.model} {device.serial}")
-        button.setStyleSheet("padding: 20px;")
-        button.setCheckable(True)
-        self.addWidget(button)
-
-    def updateDeviceButtons(self, devices: list[Device]):
+    def updateButtonGroup(self):
         """
         Add/remove buttons from navigation using new list of devices.
 
         If new list of devices matches old, nothing changes. Internal cache
         of devices is updated.
         """
-        for device in devices:
-            self.addDeviceButton(device)
+        self.deviceButtons = {}
+        for device in self.devices:
+            button = DeviceButton(device)
+            self.addWidget(button)
             self.addSpacing(10)
-        self.devices = devices
+            self.buttonGroup.addButton(button)
+            self.deviceButtons[device] = button
+
+    def deviceButtonClicked(self):
+        button = self.buttonGroup.checkedButton()
+        device = button.device
+        logger.debug("Button [%s %s] pressed", device.model, device.serial)
+        self.parentWidget().selectDevice(device)
+
+
+class DeviceButton(QPushButton):
+    def __init__(self, device: Device):
+        super().__init__()
+        self.device = device
+        self.setCheckable(True)
+        self.setText(f"{self.device.model} {self.device.serial}")
+        self.setStyleSheet("padding: 20px;")
 
 
 class StartForm(QFormLayout):
