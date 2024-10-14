@@ -57,8 +57,9 @@ def run_discovery(options: Options) -> int:
     Returns:
         Zero if command completed successfully.
     """
+    multicast_ip, multicast_port = options.multicast
     devices = networking.discover_devices(
-        DEFAULT_MULTICAST_IP, DEFAULT_MULTICAST_PORT, timeout=options.timeout,
+        multicast_ip, multicast_port, timeout=options.timeout,
     )
     print(f"{len(devices)} devices responded to discovery:")
     for device in devices:
@@ -79,22 +80,23 @@ def run_device_test(options: Options) -> int:
     Returns:
         Zero if command completed successfully.
     """
+    # Prepare
     address, port = options.address
     duration = options.duration
     rate = options.rate
     print(
         f"Start test on {address}:{port} for "
-        "{duration}s, status every {rate}ms"
+        f"{duration}s, status every {rate}ms"
     )
 
-    runner = networking.run_test(
+    # Print and collect data as it comes in
+    runner = networking.test_device(
         address,
         port,
         duration,
         rate,
         timeout=options.timeout,
     )
-
     for message in runner:
         status = StatusData.from_message(message)
         ma = f"{status.ma:,.2f}mA"
@@ -117,7 +119,16 @@ def parse(arguments: list[str]) -> Options:
     parser = argparse.ArgumentParser(
         prog="rocket_lab",
         description="Rocket Lab Production Automation Coding Test",
-        epilog="Running with zero aguments will start the GUI",
+        epilog="The default action is to start the GUI",
+    )
+    multicast_default = f"{DEFAULT_MULTICAST_IP}:{DEFAULT_MULTICAST_PORT}"
+    parser.add_argument(
+        '--multicast',
+        default=multicast_default,
+        dest='multicast',
+        metavar='ADDRESS:PORT',
+        type=argparse_address_tuple,
+        help=f"Multicast IP address and port (default {multicast_default})",
     )
     parser.add_argument(
         '-t', '--timeout',
@@ -127,7 +138,8 @@ def parse(arguments: list[str]) -> Options:
     )
     parser.add_argument(
         '-v', '--verbose', action='store_true',
-        help="Enable debug logging output")
+        help="Enable debug logging output"
+    )
 
     # Subcommands...
     subparsers = parser.add_subparsers(
@@ -172,5 +184,4 @@ def parse(arguments: list[str]) -> Options:
     )
 
     options = parser.parse_args()
-    pp(options)
     return options
