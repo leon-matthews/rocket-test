@@ -1,22 +1,56 @@
 """
-UDP networking code to communicate with DUT simulator.
+Rocket Lab specific UDP communication with DUT simulator.
 """
 
-from collections import namedtuple
 import logging
-from pprint import pprint as pp
-import socket
 from typing import Iterator
 
-from .data import Datagram, DeviceMessage
-
-from . import DEFAULT_MULTICAST_TTL, UDP_MAX_BYTES
+from .data import DeviceMessage, DiscoveryData
+from .udp import udp_client, udp_multicast_client
 
 
 logger = logging.getLogger(__name__)
 
 
-def run_test(
+def discover_devices(
+    multicast_ip: str,
+    multicast_port: int,
+    timeout: float,
+) -> list[DiscoveryData]:
+    """
+    Discover device simultors on the network using multicast UDP.
+
+    Blocks for `timeout` seconds while waiting for clients to respond.
+
+    Args:
+        multicast_ip:
+            Multicast IP address to use, eg. "224.3.11.15"
+        multicast_port:
+            Port number to use, eg. 31115
+        timeout:
+            How long to wait for responses.
+
+    Returns:
+        List of `DiscoveryData` instances, one per device.
+    """
+    # Send multicast, collect responses
+    found = udp_multicast_client(
+        multicast_ip,
+        multicast_port, b"ID;",
+        timeout=timeout,
+    )
+
+    # Parse and print device details
+    devices = DiscoveryData.from_datagrams(found)
+    logger.info(
+        "%s devices found after waiting %f seconds",
+        len(devices),
+        timeout,
+    )
+    return devices
+
+
+def test_device(
     address: str,
     port: int,
     duration: int,
@@ -27,7 +61,7 @@ def run_test(
     Send start test command to device, then collect and parse data.
 
     Stops when device sends on 'STATE=IDLE' status message, or if
-    connection timesout.
+    connection times out.
 
     Args:
         address:
@@ -42,7 +76,7 @@ def run_test(
             Seconds to wait for response from server.
 
     Returns:
-        List of test data.
+        Generator over test data.
     """
     message = DeviceMessage(
         'TEST', {
@@ -74,90 +108,3 @@ def run_test(
             return
 
         yield datum
-
-
-def udp_client(
-    address: str,
-    port: int,
-    message: bytes,
-    timeout: float,
-) -> Iterator[bytes]:
-    """
-    Generator over UDP server's responses to given message.
-
-    Args:
-        address:
-            IP address of multicast group to join
-        port:
-            UDP port for multicast socket.
-        message:
-            Byte string to send to multicast listeners.
-        timeout:
-            Seconds to wait for response from server.
-
-    Raises:
-        TimeoutError:
-            If nothing recieved from server for `timeout` seconds.
-
-    Yields:
-        Device data dataclass instances
-    """
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-        sock.connect((address, port))
-        sock.settimeout(timeout)
-        logger.debug("Connected to %s:%s", address, port)
-
-        sock.send(message)
-        logger.debug("Sent: %r", message)
-
-        while True:
-            data = sock.recv(UDP_MAX_BYTES)
-            logger.debug("Received: %r", data)
-            yield data
-
-
-def udp_multicast_client(
-    address: str,
-    port: int,
-    message: bytes,
-    timeout: float,
-) -> list[Datagram]:
-    """
-    Send message to multicast group's subscribers.
-
-    Args:
-        address:
-            IP address of multicast group to join
-        port:
-            UDP port for multicast socket.
-        message:
-            Byte string to send to multicast listeners.
-        timeout:
-            Seconds to wait for discovery messages to come back
-
-    Returns:
-        List of datagram tuples containing responses and their sender's details.
-    """
-    logging.info("Send multicast UDP discovery message to find devices")
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
-        sock.setsockopt(
-            socket.IPPROTO_IP,
-            socket.IP_MULTICAST_TTL,
-            DEFAULT_MULTICAST_TTL,
-        )
-        sock.settimeout(timeout)
-
-        sock.sendto(message, (address, port))
-        logging.debug("Sent %r to %r:%r", message, address, port)
-
-        # Block for `timeout` seconds to collect multicast responses
-        datagrams = []
-        try:
-            while True:
-                data, address = sock.recvfrom(UDP_MAX_BYTES)
-                logging.debug("Got  %r from %r", data, address)
-                datagrams.append(Datagram(*address, data))
-        except TimeoutError:
-            pass
-
-        return datagrams
