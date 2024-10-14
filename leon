@@ -1,0 +1,9 @@
+#!/usr/bin/bash
+
+# Simple wrapper to start Leon's coding test for the Production Automation team.
+
+set -o nounset
+set -o errexit
+set +o xtrace
+
+/usr/bin/env python3 -m rocket_lab "$@"
