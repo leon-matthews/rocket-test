@@ -6,16 +6,19 @@ CamelCase style should be used in this module to match the PyQT5 API style.
 from functools import partial
 import logging
 from pprint import pprint as pp
+import time
 
-from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtCore import QSize, Qt, QThread
 from PyQt5.QtWidgets import (
     QApplication,
     QButtonGroup,
+    QDialog,
     QFormLayout,
     QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QProgressDialog,
     QPushButton,
     QStackedLayout,
     QVBoxLayout,
@@ -56,6 +59,7 @@ class MainWindow(QWidget):
     """
     def __init__(self, options: command_line.Options):
         super().__init__()
+        # Quick device search to start with
         self.options = options
         self.devices = self.findDevices(timeout=0.2)
 
@@ -92,6 +96,33 @@ class MainWindow(QWidget):
         Bring its DeviceDetails instance to the top of the DeviceDetailsStack.
         """
         logger.info(f"Show details for {device.model} {device.serial}")
+
+    def updateDeviceList(self):
+        """
+        Update list of devices.
+
+        Rather than start another background thread, we're going to pop
+        up a modal dialog for just a couple of seconds until the operation
+        concludes - we don't want users interacting with elements that are
+        about to disapear after all!
+        """
+        logger.info("Updating device list")
+        worker = DeviceListUpdater(self)
+        worker.finished.connect(self.updateDeviceListFinished)
+        worker.start()
+
+    def updateDeviceListFinished(self):
+        logger.info("updateDeviceListFinished")
+
+
+class DeviceListUpdater(QThread):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def run(self):
+        time.sleep(1)
+        logger.debug("DeviceListUpdater.run()")
+        self.devices = [1, 1, 2, 3, 5, 8, 13]
 
 
 class Aggregates(QVBoxLayout):
@@ -189,7 +220,9 @@ class Navigation(QVBoxLayout):
 
         # Refresh button
         self.addStretch(1)
-        self.addWidget(QPushButton("Refresh Device List"))
+        refreshButton = QPushButton("Refresh Device List")
+        refreshButton.clicked.connect(self.refreshButtonClicked)
+        self.addWidget(refreshButton)
 
     def updateButtonGroup(self):
         """
@@ -209,8 +242,12 @@ class Navigation(QVBoxLayout):
     def deviceButtonClicked(self):
         button = self.buttonGroup.checkedButton()
         device = button.device
-        logger.debug("Button [%s %s] pressed", device.model, device.serial)
+        logger.debug("Device button [%s %s] pressed", device.model, device.serial)
         self.parentWidget().selectDevice(device)
+
+    def refreshButtonClicked(self):
+        logger.debug("Button [Refresh] pressed")
+        self.parentWidget().updateDeviceList()
 
 
 class DeviceButton(QPushButton):
