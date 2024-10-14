@@ -238,6 +238,8 @@ DEVICE_DISCOVERY2 = Datagram(
 
 
 class DiscoveryDataTest(TestCase):
+    maxDiff = None
+
     def test_from_datagram(self) -> None:
         device = DiscoveryData.from_datagram(DEVICE_DISCOVERY)
         expected = DiscoveryData(
@@ -290,6 +292,52 @@ class DiscoveryDataTest(TestCase):
         self.assertNotEqual(id(device), id(device2))
         self.assertEqual(device, device2)
         self.assertEqual(mapping[device2], "It works!")
+
+    def test_not_equal(self) -> None:
+        """
+        Devices with same model and serial number on different port numbers
+        should NOT be considered equal.
+        """
+        device1 = DiscoveryData(
+            address='192.168.0.10', port=6063,
+            model='M002', serial='SN546314'
+        )
+        device2 = DiscoveryData(
+            address='192.168.0.10', port=6064,
+            model='M002', serial='SN546314'
+        )
+        self.assertNotEqual(device1, device2)
+
+    def test_ordering(self) -> None:
+        """
+        Ensure sorting device data behaves as expected: model then serial.
+        """
+        devices = [
+            DiscoveryData(
+                address='192.168.0.10', port=6063,
+                model='M002', serial='SN546314'),
+            DiscoveryData(
+                address='192.168.0.10', port=6063,
+                model='M001', serial='SN0123457'),
+            DiscoveryData(
+                address='192.168.0.10', port=6062,
+                model='M001', serial='SN0123456'),
+        ]
+
+        expected = [
+            DiscoveryData(
+                address='192.168.0.10', port=6062,
+                model='M001', serial='SN0123456'),
+            DiscoveryData(
+                address='192.168.0.10', port=6063,
+                model='M001', serial='SN0123457'),
+            DiscoveryData(
+                address='192.168.0.10', port=6063,
+                model='M002', serial='SN546314'),
+        ]
+
+        devices.sort()
+        self.assertEqual(devices, expected)
 
 
 class StatusDataTest(TestCase):

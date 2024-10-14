@@ -47,6 +47,10 @@ def discover_devices(
         len(devices),
         timeout,
     )
+
+    # Sort devices for consistent user-interface experience
+    devices.sort()
+
     return devices
 
 

@@ -15,6 +15,7 @@ went wrong. Callers must ensure that the handle that exception.
 """
 
 from dataclasses import dataclass
+from functools import total_ordering
 import logging
 from typing import Self
 
@@ -96,12 +97,19 @@ class DeviceMessage:
         return self.to_string().encode(DEFAULT_ENCODING, errors="replace")
 
 
+@total_ordering
 @dataclass(eq=True, frozen=True, slots=True)
 class DiscoveryData:
     address: str
     port: int
     model: str
     serial: str
+
+    def __lt__(self, other: Self) -> bool:
+        """
+        Support ordering of devices by model, then serial number.
+        """
+        return (self.model, self.serial) < (other.model, other.serial)
 
     @classmethod
     def from_datagram(cls, datagram: Datagram) -> Self:
