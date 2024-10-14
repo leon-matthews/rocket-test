@@ -14,15 +14,15 @@ At every level a ValueError may be raised containing details about what
 went wrong. Callers must ensure that the handle that exception.
 """
 
-from collections import namedtuple
 from dataclasses import dataclass
-from pprint import pprint as pp
+import logging
 from typing import Self
 
 from . import DEFAULT_ENCODING
+from .udp import Datagram
 
 
-Datagram = namedtuple("Datagram", "address port data")
+logger = logging.getLogger(__name__)
 
 
 @dataclass(eq=True, frozen=True, slots=True)

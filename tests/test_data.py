@@ -1,5 +1,4 @@
 
-from pprint import pprint as pp
 from unittest import skip, TestCase
 
 from rocket_lab.data import Datagram, DeviceMessage, DiscoveryData, StatusData
@@ -18,7 +17,10 @@ class DeviceMessageTest(TestCase):
         """
         ValueError raised if message malformed.
         """
-        message = r"Could not parse MODEL=M001=M002 from b'ID;MODEL=M001=M002;SERIAL=SN0123456;'"
+        message = (
+            r"Could not parse MODEL=M001=M002 from "
+            r"b'ID;MODEL=M001=M002;SERIAL=SN0123456;'"
+        )
         with self.assertRaisesRegex(ValueError, message):
             DeviceMessage.from_bytes(b"ID;MODEL=M001=M002;SERIAL=SN0123456;")
 
@@ -252,15 +254,42 @@ class DiscoveryDataTest(TestCase):
         expected = [
             DiscoveryData(
                 address='192.168.0.10',
-               port=6062,
-               model='M001',
-               serial='SN0123456'),
-            DiscoveryData(address='192.168.0.10',
-               port=6063,
-               model='M001',
-               serial='SN0123457'),
+                port=6062,
+                model='M001',
+                serial='SN0123456'),
+            DiscoveryData(
+                address='192.168.0.10',
+                port=6063,
+                model='M001',
+                serial='SN0123457'),
         ]
         self.assertEqual(devices, expected)
+
+    def test_hashable(self) -> None:
+        """
+        Confirm that we can use frozen dataclasses as the key in a dictionary.
+        """
+        # Try and use instance as key in dictionary
+        device = DiscoveryData(
+            address='192.168.0.10',
+            port=6062,
+            model='M001',
+            serial='SN0123456',
+        )
+        mapping = {}
+        mapping[device] = "It works!"
+
+        # Same data, but different object
+        device2 = DiscoveryData(
+            address='192.168.0.10',
+            port=6062,
+            model='M001',
+            serial='SN0123456',
+        )
+
+        self.assertNotEqual(id(device), id(device2))
+        self.assertEqual(device, device2)
+        self.assertEqual(mapping[device2], "It works!")
 
 
 class StatusDataTest(TestCase):
@@ -295,7 +324,10 @@ class StatusDataTest(TestCase):
                 'MA': '-11.1',
             })
 
-        error = r"^Invalid status data: could not convert string to float: 'banana'$"
+        error = (
+            r"^Invalid status data: could not "
+            r"convert string to float: 'banana'$"
+        )
         with self.assertRaisesRegex(ValueError, error):
             StatusData.from_message(message)
 
