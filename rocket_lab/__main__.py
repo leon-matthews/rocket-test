@@ -7,8 +7,6 @@ Run the command-line application if arguments given, otherwise start the GUI.
 import logging
 import sys
 
-from PyQt5.QtWidgets import QApplication
-
 from . import command_line, gui
 
 
@@ -23,20 +21,11 @@ def main(options: command_line.Options) -> int:
     """
     match options.command:
         case 'discover':
-            return command_line.discover(options)
+            return command_line.run_discovery(options)
         case 'test':
-            return command_line.test(options)
+            return command_line.run_device_test(options)
         case _:
-            return start_gui()
-
-
-def start_gui() -> int:
-    logger.info("Starting GUI...")
-    app = QApplication([])
-    window = gui.MainWindow()
-    window.show()
-    app.exec()
-    return 0
+            return gui.main(options)
 
 
 if __name__ == '__main__':

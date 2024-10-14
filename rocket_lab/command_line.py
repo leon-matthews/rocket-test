@@ -9,6 +9,7 @@ from typing import TypeAlias
 from . import networking, DEFAULT_MULTICAST_IP, DEFAULT_MULTICAST_PORT
 from .data import DiscoveryData, StatusData
 
+
 Options: TypeAlias = argparse.Namespace
 
 
@@ -45,7 +46,7 @@ def argparse_address_tuple(string: str) -> tuple[str, int]:
     return (address, port)
 
 
-def discover(options: Options) -> int:
+def run_discovery(options: Options) -> int:
     """
     Implement 'discover' subcommand for find devices via UDP multicast.
 
@@ -56,21 +57,18 @@ def discover(options: Options) -> int:
     Returns:
         Zero if command completed successfully.
     """
-    # Send multicast, collect responses
-    found = networking.udp_multicast_client(
-        DEFAULT_MULTICAST_IP,
-        DEFAULT_MULTICAST_PORT, b"ID;",
-        timeout=options.timeout,
+    devices = networking.discover_devices(
+        DEFAULT_MULTICAST_IP, DEFAULT_MULTICAST_PORT, timeout=options.timeout,
     )
-
-    # Parse and print device details
-    devices = DiscoveryData.from_datagrams(found)
     print(f"{len(devices)} devices responded to discovery:")
     for device in devices:
-        print(f"{device.model:<6} {device.serial:<12} {device.address}:{device.port}")
+        print(
+            f"{device.model:<6} {device.serial:<12} "
+            f"{device.address}:{device.port}"
+        )
 
 
-def test(options: Options) -> int:
+def run_device_test(options: Options) -> int:
     """
     Implement 'test' subcommand for devices.
 
@@ -84,7 +82,10 @@ def test(options: Options) -> int:
     address, port = options.address
     duration = options.duration
     rate = options.rate
-    print(f"Start test on {address}:{port} for {duration}s, status every {rate}ms")
+    print(
+        f"Start test on {address}:{port} for "
+        "{duration}s, status every {rate}ms"
+    )
 
     runner = networking.run_test(
         address,
@@ -116,7 +117,7 @@ def parse(arguments: list[str]) -> Options:
     parser = argparse.ArgumentParser(
         prog="rocket_lab",
         description="Rocket Lab Production Automation Coding Test",
-        epilog="Run with zero aguments to start GUI",
+        epilog="Running with zero aguments will start the GUI",
     )
     parser.add_argument(
         '-t', '--timeout',
@@ -162,6 +163,12 @@ def parse(arguments: list[str]) -> Options:
         metavar='ADDRESS:PORT',
         type=argparse_address_tuple,
         help="IP address and port number of device, eg. 192.168.0.10:6062"
+    )
+
+    # ...'gui' command
+    discover = subparsers.add_parser(
+        'gui',
+        help='Start PyQT graphical user interface (default)',
     )
 
     options = parser.parse_args()
