@@ -1,7 +1,6 @@
 
 from argparse import ArgumentTypeError
-from pprint import pprint as pp
-from unittest import skip, TestCase
+from unittest import TestCase
 
 from rocket_lab.command_line import argparse_address_tuple
 

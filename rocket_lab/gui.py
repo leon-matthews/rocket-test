@@ -1,14 +1,56 @@
 
+import logging
+
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtWidgets import (
-    QFormLayout, QFrame, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, QVBoxLayout, QWidget
+    QApplication,
+    QFormLayout,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
 
 
+from .command_line import Options
+from .data import DiscoveryData
+
+
+logger = logging.getLogger(__name__)
+
+
+def main(options: Options) -> int:
+    """
+    Start GUI.
+    """
+    logger.info("Starting GUI...")
+    app = QApplication([])
+    devices = []
+    window = MainWindow(devices)
+    window.show()
+    app.exec()
+    return 0
+
+
 class MainWindow(QWidget):
-    def __init__(self):
+    """
+    Applications main window.
+
+    The GUI is organised into sub-objects as follows:
+
+    There is one navigation bar containing buttons for switching between
+    all of the detected devices.
+
+    A details widget is created for every detected device. They are stacked on
+    top of each other in a QStackedLayout. Buttons in the navigation bring
+    them to the top of the stack.
+    """
+    def __init__(self, devices: list[DiscoveryData]):
         super().__init__()
-        self.setWindowTitle("Leon's Rocket Lab Production Automation Coding Test")
+        self.setWindowTitle("Leon's Rocket Lab Production Automation Test")
         self.layout()
 
     def layout(self):
@@ -88,7 +130,7 @@ class DetailLayout(QVBoxLayout):
 
         # Put start button in bottom right corner
         start = QPushButton("Start")
-        start.setStyleSheet("padding: 20px;");
+        start.setStyleSheet("padding: 20px;")
         layout.addWidget(start)
 
         self.addLayout(layout)
@@ -127,7 +169,7 @@ class NavigationLayout(QVBoxLayout):
 
     def addDeviceButton(self, model: str, serial: str) -> QPushButton:
         button = QPushButton(f"Device {model} {serial}")
-        button.setStyleSheet("padding: 20px;");
+        button.setStyleSheet("padding: 20px;")
         button.setCheckable(True)
         self.addWidget(button)
 

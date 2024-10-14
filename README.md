@@ -4,9 +4,10 @@
 Produce GUI for testing team to visualise the behivour of multiple devices
 simultaneously, using only the Python standard library and PyQt5.
 
-In my eagerness to impress I have gone through too many cycles of refactoring
-and rather over-engineered the app, I'm sorry about that! That said, I'm quite
-happy about how the data conversion and optional extra command-line came out.
+My nervousness and eagerness to impress has driven a few too many cycles of
+refactoring, and hence the app has become rather over-engineered! That said,
+I'm quite happy about how the networking and data conversion system, and the
+optional-extra command-line worked out.
 
 
 ## Requirements

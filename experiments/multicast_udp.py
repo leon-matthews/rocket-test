@@ -68,6 +68,8 @@ if __name__ == '__main__':
         level=logging.DEBUG,
     )
 
-    returned = multicast_client(MULTICAST_IP, MULTICAST_PORT, b"ID;", timeout=1.0)
+    returned = multicast_client(
+        MULTICAST_IP, MULTICAST_PORT, b"ID;", timeout=1.0,
+    )
     pp(returned)
     sys.exit(1)
