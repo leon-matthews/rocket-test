@@ -68,12 +68,14 @@ class MainWindow(QWidget):
         self.setMinimumSize(QSize(600, 300))
         self.resize(QSize(900, 600))
 
-        # Layout navigation and device details
+        # Layout
         layout = QHBoxLayout()
 
+        # Navigation
         self.navigation = Navigation(self.devices)
         layout.addLayout(self.navigation)
 
+        # Stack of device detailsnavigation and device details
         self.details = DeviceDetails()
         layout.addLayout(self.details, stretch=1)
 
@@ -138,12 +140,27 @@ class Aggregates(QVBoxLayout):
 
 
 class DeviceDetailsStack(QStackedLayout):
-    pass
+    def __init__(self, devices: list[Device]):
+        """
+        Initialise navigation.
+
+        Build one button for each given device.
+
+        Args:
+            devices:
+                List of devices discovered on network.
+        """
+        super().__init__()
+        self.devices = devices
+        details = DeviceDetails(self.devices[0])
+        self.addLayout(details)
 
 
 class DeviceDetails(QVBoxLayout):
     """
     Hold device and its test details.
+
+    Several of these are contained within `DeviceDetailsStack`.
     """
     def __init__(self):
         super().__init__()
@@ -161,7 +178,7 @@ class DeviceDetails(QVBoxLayout):
 
     def addAggregates(self, layout):
         aggregates = Aggregates()
-        layout.addLayout(aggregates, 1)
+        layout.addLayout(aggregates, 0)
         return aggregates
 
     def addChart(self):

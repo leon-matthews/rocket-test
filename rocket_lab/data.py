@@ -40,7 +40,7 @@ class DeviceMessage:
     This should be understood as message named 'ID' with the
     data {'model': 'M001', 'serial': 'SN0123457'}.
 
-    Note that no attempt to parse numeric data is made.
+    Note that no attempt to parse numeric data is made at this layer.
     """
     name: str
     data: dict[str, str]
@@ -100,6 +100,15 @@ class DeviceMessage:
 @total_ordering
 @dataclass(eq=True, frozen=True, slots=True)
 class DiscoveryData:
+    """
+    Device details as reported by device during discovery.
+
+    For ease of GUI development these details are immutable, sortable, and can
+    even be used as keys in a dictionary.
+
+    Two alternate constructors are provided so that they can build themselves
+    from one or more UDP datagrams.
+    """
     address: str
     port: int
     model: str
